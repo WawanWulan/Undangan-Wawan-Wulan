@@ -126,61 +126,100 @@ function copyRekeningFallback(nomor) {
 
 
 // ========================================
-// RSVP
+// RSVP & WISHES - GOOGLE SHEETS
 // ========================================
+
+const RSVP_URL = "https://script.google.com/macros/s/AKfycbzWP4qeM8miPs--fv0PcDNEa4xzDG7aVVbbqBH7jwzuvHLIkMJdO1HsU1kx6_LMJ3NY/exec";
 
 const rsvpForm = document.getElementById("rsvpForm");
 
 if (rsvpForm) {
 
-  rsvpForm.addEventListener("submit", function (e) {
+  rsvpForm.addEventListener("submit", async function (e) {
 
     e.preventDefault();
 
-    const nameElement = document.getElementById("name");
-    const attendanceElement = document.getElementById("attendance");
-    const guestsElement = document.getElementById("guests");
-    const messageElement = document.getElementById("message");
-    const messagesElement = document.getElementById("messages");
+    const name = document.getElementById("name").value.trim();
+    const attendance = document.getElementById("attendance").value;
+    const guests = document.getElementById("guests").value;
+    const message = document.getElementById("message").value.trim();
 
-    if (
-      !nameElement ||
-      !attendanceElement ||
-      !guestsElement ||
-      !messageElement ||
-      !messagesElement
-    ) {
+    if (!name || !attendance || !message) {
+      alert("Mohon lengkapi data terlebih dahulu.");
       return;
     }
 
-    const name = nameElement.value.trim();
-    const attendance = attendanceElement.value;
-    const guests = guestsElement.value;
-    const message = messageElement.value.trim();
+    const button = rsvpForm.querySelector("button[type='submit']");
 
-    const box = document.createElement("div");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Mengirim...";
+    }
 
-    box.className = "message";
+    const data = {
+      name: name,
+      attendance: attendance,
+      guests: guests,
+      message: message
+    };
 
-    box.innerHTML =
-      "<b>" + escapeHtml(name) + "</b><br>" +
-      "<small>" +
-      escapeHtml(attendance) +
-      " • " +
-      escapeHtml(guests) +
-      " tamu</small>" +
-      "<p>" +
-      escapeHtml(message) +
-      "</p>";
+    try {
 
-    messagesElement.prepend(box);
+      await fetch(RSVP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(data)
+      });
 
-    rsvpForm.reset();
+      // Tampilkan ucapan di halaman
+      const messages = document.getElementById("messages");
 
-    guestsElement.value = "1";
+      if (messages) {
+
+        const box = document.createElement("div");
+
+        box.className = "message";
+
+        box.innerHTML = `
+          <b>${escapeHtml(name)}</b><br>
+          <small>${escapeHtml(attendance)} • ${escapeHtml(guests)} tamu</small>
+          <p>${escapeHtml(message)}</p>
+        `;
+
+        messages.prepend(box);
+      }
+
+      alert("Terima kasih! Konfirmasi kehadiran dan ucapan berhasil dikirim. ❤️");
+
+      rsvpForm.reset();
+
+      const guestsInput = document.getElementById("guests");
+
+      if (guestsInput) {
+        guestsInput.value = "1";
+      }
+
+    } catch (error) {
+
+      console.error("RSVP Error:", error);
+
+      alert("Gagal mengirim RSVP. Silakan coba lagi.");
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Kirim Ucapan";
+      }
+
+    }
+
   });
-}
 
+}
 
 // ========================================
 // ESCAPE HTML
