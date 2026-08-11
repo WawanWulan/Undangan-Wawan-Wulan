@@ -5,8 +5,7 @@
 const target = new Date("2026-10-17T10:00:00+07:00").getTime();
 
 function countdown() {
-  const now = Date.now();
-  const distance = target - now;
+  const distance = target - Date.now();
 
   const days = document.getElementById("days");
   const hours = document.getElementById("hours");
@@ -37,7 +36,7 @@ setInterval(countdown, 1000);
 
 
 // ========================================
-// OPENING & MUSIK
+// OPENING & MUSIC
 // ========================================
 
 const opening = document.getElementById("opening");
@@ -45,12 +44,8 @@ const music = document.getElementById("music");
 const openBtn = document.getElementById("openBtn");
 const musicBtn = document.getElementById("musicBtn");
 
-
-// Tombol Buka Undangan
 if (openBtn) {
   openBtn.addEventListener("click", function () {
-
-    console.log("Tombol Buka Undangan diklik");
 
     if (opening) {
       opening.classList.add("hide");
@@ -59,30 +54,19 @@ if (openBtn) {
     if (music) {
       music.currentTime = 0;
 
-      music.play()
-        .then(() => {
-          console.log("Musik berhasil diputar.");
-        })
-        .catch((error) => {
-          console.error("Musik gagal diputar:", error);
-        });
+      music.play().catch(function (error) {
+        console.error("Musik gagal diputar:", error);
+      });
     }
+
   });
 }
 
-
-// Tombol Play / Pause Musik
 if (musicBtn && music) {
   musicBtn.addEventListener("click", function () {
 
     if (music.paused) {
-      music.play()
-        .then(() => {
-          console.log("Musik diputar.");
-        })
-        .catch((error) => {
-          console.error("Musik gagal diputar:", error);
-        });
+      music.play();
     } else {
       music.pause();
     }
@@ -92,7 +76,7 @@ if (musicBtn && music) {
 
 
 // ========================================
-// COPY NOMOR REKENING
+// COPY REKENING
 // ========================================
 
 function copyRekening(nomor) {
@@ -105,20 +89,17 @@ function copyRekening(nomor) {
   if (navigator.clipboard && window.isSecureContext) {
 
     navigator.clipboard.writeText(nomor)
-      .then(() => {
+      .then(function () {
         alert("Nomor rekening berhasil disalin!");
       })
-      .catch(() => {
+      .catch(function () {
         copyRekeningFallback(nomor);
       });
 
   } else {
-
     copyRekeningFallback(nomor);
-
   }
 }
-
 
 function copyRekeningFallback(nomor) {
 
@@ -127,7 +108,6 @@ function copyRekeningFallback(nomor) {
   textarea.value = nomor;
   textarea.style.position = "fixed";
   textarea.style.left = "-9999px";
-  textarea.style.top = "0";
 
   document.body.appendChild(textarea);
 
@@ -135,14 +115,10 @@ function copyRekeningFallback(nomor) {
   textarea.select();
 
   try {
-
     document.execCommand("copy");
     alert("Nomor rekening berhasil disalin!");
-
   } catch (error) {
-
-    alert("Gagal menyalin nomor rekening. Silakan salin manual.");
-
+    alert("Gagal menyalin nomor rekening.");
   }
 
   document.body.removeChild(textarea);
@@ -186,11 +162,16 @@ if (rsvpForm) {
 
     box.className = "message";
 
-    box.innerHTML = `
-      <b>${escapeHtml(name)}</b><br>
-      <small>${escapeHtml(attendance)} • ${escapeHtml(guests)} tamu</small>
-      <p>${escapeHtml(message)}</p>
-    `;
+    box.innerHTML =
+      "<b>" + escapeHtml(name) + "</b><br>" +
+      "<small>" +
+      escapeHtml(attendance) +
+      " • " +
+      escapeHtml(guests) +
+      " tamu</small>" +
+      "<p>" +
+      escapeHtml(message) +
+      "</p>";
 
     messagesElement.prepend(box);
 
