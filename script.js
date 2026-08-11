@@ -27,15 +27,12 @@ document.getElementById("musicBtn").onclick=()=>{
   else music.pause();
 };
 
-function copyRekening(){
-  navigator.clipboard.writeText("8030677383");
-  alert("Nomor rekening BCA berhasil disalin.");
-}
-function copyRekeningWulan() {
-    navigator.clipboard.writeText(
-        document.getElementById("rekeningWulan").innerText
-    );
-    alert("Nomor rekening Wulan berhasil disalin!");
+function copyRekening(id) {
+  const rekening = document.getElementById(id).innerText;
+
+  navigator.clipboard.writeText(rekening).then(() => {
+    alert("Nomor rekening berhasil disalin!");
+  });
 }
 document.getElementById("rsvpForm").addEventListener("submit",e=>{
   e.preventDefault();
