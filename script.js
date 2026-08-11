@@ -5,7 +5,7 @@ const musicBtn = document.getElementById("musicBtn");
 const target = new Date("2026-10-17T10:00:00+07:00").getTime();
 
 function countdown() {
-  const now = Date.now();
+  const now = new Date().getTime();
   const distance = target - now;
 
   const days = document.getElementById("days");
@@ -13,32 +13,29 @@ function countdown() {
   const minutes = document.getElementById("minutes");
   const seconds = document.getElementById("seconds");
 
-  // Pastikan elemen countdown tersedia
   if (!days || !hours || !minutes || !seconds) {
-    console.error("Elemen countdown tidak ditemukan.");
+    console.error("Elemen countdown tidak ditemukan");
     return;
   }
 
-  // Jika waktu sudah lewat
   if (distance <= 0) {
-    days.textContent = "0";
-    hours.textContent = "0";
-    minutes.textContent = "0";
-    seconds.textContent = "0";
+    days.innerHTML = "0";
+    hours.innerHTML = "0";
+    minutes.innerHTML = "0";
+    seconds.innerHTML = "0";
     return;
   }
 
-  const totalSeconds = Math.floor(distance / 1000);
-
-  const d = Math.floor(totalSeconds / 86400);
-  const h = Math.floor((totalSeconds % 86400) / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-
-  days.textContent = d;
-  hours.textContent = h;
-  minutes.textContent = m;
-  seconds.textContent = s;
+  days.innerHTML = Math.floor(distance / (1000 * 60 * 60 * 24));
+  hours.innerHTML = Math.floor(
+    (distance / (1000 * 60 * 60)) % 24
+  );
+  minutes.innerHTML = Math.floor(
+    (distance / (1000 * 60)) % 60
+  );
+  seconds.innerHTML = Math.floor(
+    (distance / 1000) % 60
+  );
 }
 
 countdown();
