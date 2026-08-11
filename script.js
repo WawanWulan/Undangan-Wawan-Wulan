@@ -32,6 +32,8 @@ function copyRekening(id) {
 
   navigator.clipboard.writeText(rekening).then(() => {
     alert("Nomor rekening berhasil disalin!");
+  }).catch(() => {
+    alert("Gagal menyalin nomor rekening.");
   });
 }
 document.getElementById("rsvpForm").addEventListener("submit",e=>{
