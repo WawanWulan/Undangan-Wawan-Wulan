@@ -31,7 +31,12 @@ function copyRekening(){
   navigator.clipboard.writeText("8030677383");
   alert("Nomor rekening BCA berhasil disalin.");
 }
-
+function copyRekeningWulan() {
+    navigator.clipboard.writeText(
+        document.getElementById("rekeningWulan").innerText
+    );
+    alert("Nomor rekening Wulan berhasil disalin!");
+}
 document.getElementById("rsvpForm").addEventListener("submit",e=>{
   e.preventDefault();
   const name=document.getElementById("name").value.trim();
