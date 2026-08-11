@@ -1,59 +1,226 @@
+```javascript
+// ================================
+// COUNTDOWN
+// ================================
+
 const target = new Date("2026-10-17T10:00:00+07:00").getTime();
 
-function countdown(){
-  const d=target-Date.now();
-  if(d<=0){
-    ["days","hours","minutes","seconds"].forEach(id=>document.getElementById(id).textContent="0");
+function countdown() {
+  const now = Date.now();
+  const distance = target - now;
+
+  const days = document.getElementById("days");
+  const hours = document.getElementById("hours");
+  const minutes = document.getElementById("minutes");
+  const seconds = document.getElementById("seconds");
+
+  if (!days || !hours || !minutes || !seconds) {
     return;
   }
-  document.getElementById("days").textContent=Math.floor(d/86400000);
-  document.getElementById("hours").textContent=Math.floor(d/3600000)%24;
-  document.getElementById("minutes").textContent=Math.floor(d/60000)%60;
-  document.getElementById("seconds").textContent=Math.floor(d/1000)%60;
+
+  if (distance <= 0) {
+    days.textContent = "0";
+    hours.textContent = "0";
+    minutes.textContent = "0";
+    seconds.textContent = "0";
+    return;
+  }
+
+  days.textContent = Math.floor(distance / 86400000);
+  hours.textContent = Math.floor(distance / 3600000) % 24;
+  minutes.textContent = Math.floor(distance / 60000) % 60;
+  seconds.textContent = Math.floor(distance / 1000) % 60;
 }
-setInterval(countdown,1000);
+
 countdown();
+setInterval(countdown, 1000);
 
-const opening=document.getElementById("opening");
-const music=document.getElementById("music");
 
-document.getElementById("openBtn").onclick=()=>{
-  opening.classList.add("hide");
-  music.play().catch(()=>{});
-};
+// ================================
+// OPENING & MUSIC
+// ================================
 
-document.getElementById("musicBtn").onclick=()=>{
-  if(music.paused) music.play();
-  else music.pause();
-};
+const opening = document.getElementById("opening");
+const music = document.getElementById("music");
+const openBtn = document.getElementById("openBtn");
+const musicBtn = document.getElementById("musicBtn");
 
-function copyRekening(nomor) {
-  navigator.clipboard.writeText(nomor).then(() => {
-    alert("Nomor rekening berhasil disalin!");
-  }).catch(() => {
-    alert("Gagal menyalin nomor rekening.");
+
+// Tombol Buka Undangan
+if (openBtn) {
+  openBtn.addEventListener("click", function () {
+
+    // Hilangkan halaman pembuka
+    if (opening) {
+      opening.classList.add("hide");
+    }
+
+    // Putar musik
+    if (music) {
+      music.play()
+        .then(() => {
+          console.log("Musik berhasil diputar.");
+        })
+        .catch((error) => {
+          console.log("Musik gagal diputar:", error);
+        });
+    }
   });
 }
-document.getElementById("rsvpForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const name=document.getElementById("name").value.trim();
-  const attendance=document.getElementById("attendance").value;
-  const guests=document.getElementById("guests").value;
-  const message=document.getElementById("message").value.trim();
 
-  const box=document.createElement("div");
-  box.className="message";
-  box.innerHTML=`<b>${escapeHtml(name)}</b><br>
-  <small>${escapeHtml(attendance)} • ${escapeHtml(guests)} tamu</small>
-  <p>${escapeHtml(message)}</p>`;
 
-  document.getElementById("messages").prepend(box);
-  e.target.reset();
-  document.getElementById("guests").value=1;
-});
+// Tombol Play / Pause Musik
+if (musicBtn && music) {
+  musicBtn.addEventListener("click", function () {
 
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
+    if (music.paused) {
+      music.play()
+        .then(() => {
+          console.log("Musik diputar.");
+        })
+        .catch((error) => {
+          console.log("Musik gagal diputar:", error);
+        });
+    } else {
+      music.pause();
+      console.log("Musik dijeda.");
+    }
+
+  });
 }
+
+
+// ================================
+// COPY NOMOR REKENING
+// ================================
+
+function copyRekening(nomor) {
+
+  if (!nomor) {
+    alert("Nomor rekening tidak ditemukan.");
+    return;
+  }
+
+  // Metode Clipboard modern
+  if (navigator.clipboard && window.isSecureContext) {
+
+    navigator.clipboard.writeText(nomor)
+      .then(() => {
+        alert("Nomor rekening berhasil disalin!");
+      })
+      .catch(() => {
+        copyRekeningFallback(nomor);
+      });
+
+  } else {
+
+    copyRekeningFallback(nomor);
+
+  }
+}
+
+
+// Fallback untuk browser yang tidak mendukung Clipboard API
+function copyRekeningFallback(nomor) {
+
+  const textarea = document.createElement("textarea");
+
+  textarea.value = nomor;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+
+  document.body.appendChild(textarea);
+
+  textarea.focus();
+  textarea.select();
+
+  try {
+
+    document.execCommand("copy");
+    alert("Nomor rekening berhasil disalin!");
+
+  } catch (error) {
+
+    alert("Gagal menyalin nomor rekening. Silakan salin secara manual.");
+
+  }
+
+  document.body.removeChild(textarea);
+}
+
+
+// ================================
+// RSVP
+// ================================
+
+const rsvpForm = document.getElementById("rsvpForm");
+
+if (rsvpForm) {
+
+  rsvpForm.addEventListener("submit", function (e) {
+
+    e.preventDefault();
+
+    const nameElement = document.getElementById("name");
+    const attendanceElement = document.getElementById("attendance");
+    const guestsElement = document.getElementById("guests");
+    const messageElement = document.getElementById("message");
+    const messagesElement = document.getElementById("messages");
+
+    if (
+      !nameElement ||
+      !attendanceElement ||
+      !guestsElement ||
+      !messageElement ||
+      !messagesElement
+    ) {
+      return;
+    }
+
+    const name = nameElement.value.trim();
+    const attendance = attendanceElement.value;
+    const guests = guestsElement.value;
+    const message = messageElement.value.trim();
+
+    const box = document.createElement("div");
+
+    box.className = "message";
+
+    box.innerHTML = `
+      <b>${escapeHtml(name)}</b><br>
+      <small>${escapeHtml(attendance)} • ${escapeHtml(guests)} tamu</small>
+      <p>${escapeHtml(message)}</p>
+    `;
+
+    messagesElement.prepend(box);
+
+    rsvpForm.reset();
+
+    guestsElement.value = "1";
+
+  });
+
+}
+
+
+// ================================
+// SECURITY / HTML ESCAPE
+// ================================
+
+function escapeHtml(value) {
+
+  return String(value).replace(/[&<>"']/g, function (character) {
+
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[character];
+
+  });
+
+}
+```
