@@ -27,10 +27,8 @@ document.getElementById("musicBtn").onclick=()=>{
   else music.pause();
 };
 
-function copyRekening(id) {
-  const rekening = document.getElementById(id).innerText;
-
-  navigator.clipboard.writeText(rekening).then(() => {
+function copyRekening(nomor) {
+  navigator.clipboard.writeText(nomor).then(() => {
     alert("Nomor rekening berhasil disalin!");
   }).catch(() => {
     alert("Gagal menyalin nomor rekening.");
