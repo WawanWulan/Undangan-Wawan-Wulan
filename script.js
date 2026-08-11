@@ -2,6 +2,7 @@ const opening = document.getElementById("opening");
 const music = document.getElementById("music");
 const openBtn = document.getElementById("openBtn");
 const musicBtn = document.getElementById("musicBtn");
+const target = new Date("2026-10-17T10:00:00+07:00").getTime();
 
 if (openBtn) {
   openBtn.addEventListener("click", function () {
