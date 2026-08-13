@@ -1,4 +1,75 @@
 // ========================================
+// PERSONALIZED GUEST
+// ========================================
+
+let currentGuestName = "";
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, function (character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[character];
+  });
+}
+
+function slugify(value) {
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function loadGuest() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get("to");
+
+  const guestElement = document.getElementById("guestName");
+  const nameInput = document.getElementById("name");
+
+  if (!slug) {
+    if (guestElement) guestElement.textContent = "Bapak/Ibu/Saudara/i";
+    return;
+  }
+
+  try {
+    const response = await fetch("./tamu.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("tamu.json tidak dapat dibaca.");
+
+    const guests = await response.json();
+    const name = guests[slug];
+
+    if (name) {
+      currentGuestName = name;
+
+      if (guestElement) {
+        guestElement.textContent = name;
+      }
+
+      // Nama tamu otomatis masuk ke form RSVP, tetapi tetap bisa diedit.
+      if (nameInput) {
+        nameInput.value = name;
+      }
+
+      document.title = `${name} — Wawan & Wulan`;
+    } else {
+      if (guestElement) guestElement.textContent = "Bapak/Ibu/Saudara/i";
+    }
+  } catch (error) {
+    console.error("Gagal memuat data tamu:", error);
+  }
+}
+
+loadGuest();
+
+
+// ========================================
 // COUNTDOWN
 // ========================================
 
@@ -12,10 +83,7 @@ function countdown() {
   const minutes = document.getElementById("minutes");
   const seconds = document.getElementById("seconds");
 
-  if (!days || !hours || !minutes || !seconds) {
-    console.error("Elemen countdown tidak ditemukan.");
-    return;
-  }
+  if (!days || !hours || !minutes || !seconds) return;
 
   if (distance <= 0) {
     days.textContent = "0";
@@ -46,31 +114,24 @@ const musicBtn = document.getElementById("musicBtn");
 
 if (openBtn) {
   openBtn.addEventListener("click", function () {
-
-    if (opening) {
-      opening.classList.add("hide");
-    }
+    if (opening) opening.classList.add("hide");
 
     if (music) {
       music.currentTime = 0;
-
       music.play().catch(function (error) {
         console.error("Musik gagal diputar:", error);
       });
     }
-
   });
 }
 
 if (musicBtn && music) {
   musicBtn.addEventListener("click", function () {
-
     if (music.paused) {
       music.play();
     } else {
       music.pause();
     }
-
   });
 }
 
@@ -80,14 +141,12 @@ if (musicBtn && music) {
 // ========================================
 
 function copyRekening(nomor) {
-
   if (!nomor) {
     alert("Nomor rekening tidak ditemukan.");
     return;
   }
 
   if (navigator.clipboard && window.isSecureContext) {
-
     navigator.clipboard.writeText(nomor)
       .then(function () {
         alert("Nomor rekening berhasil disalin!");
@@ -95,22 +154,18 @@ function copyRekening(nomor) {
       .catch(function () {
         copyRekeningFallback(nomor);
       });
-
   } else {
     copyRekeningFallback(nomor);
   }
 }
 
 function copyRekeningFallback(nomor) {
-
   const textarea = document.createElement("textarea");
-
   textarea.value = nomor;
   textarea.style.position = "fixed";
   textarea.style.left = "-9999px";
 
   document.body.appendChild(textarea);
-
   textarea.focus();
   textarea.select();
 
@@ -130,13 +185,10 @@ function copyRekeningFallback(nomor) {
 // ========================================
 
 const RSVP_URL = "https://script.google.com/macros/s/AKfycbzWP4qeM8miPs--fv0PcDNEa4xzDG7aVVbbqBH7jwzuvHLIkMJdO1HsU1kx6_LMJ3NY/exec";
-
 const rsvpForm = document.getElementById("rsvpForm");
 
 if (rsvpForm) {
-
   rsvpForm.addEventListener("submit", async function (e) {
-
     e.preventDefault();
 
     const name = document.getElementById("name").value.trim();
@@ -160,11 +212,12 @@ if (rsvpForm) {
       name: name,
       attendance: attendance,
       guests: guests,
-      message: message
+      message: message,
+      invitation: currentGuestName || name,
+      guestSlug: new URLSearchParams(window.location.search).get("to") || ""
     };
 
     try {
-
       await fetch(RSVP_URL, {
         method: "POST",
         mode: "no-cors",
@@ -174,13 +227,10 @@ if (rsvpForm) {
         body: JSON.stringify(data)
       });
 
-      // Tampilkan ucapan di halaman
       const messages = document.getElementById("messages");
 
       if (messages) {
-
         const box = document.createElement("div");
-
         box.className = "message";
 
         box.innerHTML = `
@@ -197,46 +247,16 @@ if (rsvpForm) {
       rsvpForm.reset();
 
       const guestsInput = document.getElementById("guests");
-
-      if (guestsInput) {
-        guestsInput.value = "1";
-      }
+      if (guestsInput) guestsInput.value = "1";
 
     } catch (error) {
-
       console.error("RSVP Error:", error);
-
       alert("Gagal mengirim RSVP. Silakan coba lagi.");
-
     } finally {
-
       if (button) {
         button.disabled = false;
         button.textContent = "Kirim Ucapan";
       }
-
     }
-
   });
-
-}
-
-// ========================================
-// ESCAPE HTML
-// ========================================
-
-function escapeHtml(value) {
-
-  return String(value).replace(/[&<>"']/g, function (character) {
-
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[character];
-
-  });
-
 }

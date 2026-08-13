@@ -59,3 +59,9 @@ footer{padding:80px 7%;text-align:center;background:#604a42;color:#fff}
 
 .story-year{font-size:50px}
 }
+
+
+/* Personalized guest */
+.guest-label{margin:18px 0 2px;font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.opening-inner #guestName{font-family:"Cormorant Garamond",serif;font-size:clamp(25px,5vw,42px);margin:0 0 2px;font-weight:600}
+.guest-place{margin:0 0 20px;font-size:13px;opacity:.9}
