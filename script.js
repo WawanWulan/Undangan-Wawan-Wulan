@@ -28,41 +28,76 @@ function slugify(value) {
 
 async function loadGuest() {
   const params = new URLSearchParams(window.location.search);
-  const slug = params.get("to");
+  const guestParam = params.get("to");
 
   const guestElement = document.getElementById("guestName");
   const nameInput = document.getElementById("name");
 
-  if (!slug) {
-    if (guestElement) guestElement.textContent = "Bapak/Ibu/Saudara/i";
+  if (!guestElement) {
+    console.error("Elemen #guestName tidak ditemukan.");
+    return;
+  }
+
+  if (!guestParam) {
+    guestElement.textContent = "Bapak/Ibu/Saudara/i";
     return;
   }
 
   try {
-    const response = await fetch("./tamu.json", { cache: "no-store" });
-    if (!response.ok) throw new Error("tamu.json tidak dapat dibaca.");
+    /*
+      Link baru dari tamu.html membawa nama asli langsung:
+      ?to=Budi%20Santoso
 
-    const guests = await response.json();
-    const name = guests[slug];
+      Link lama yang memakai slug:
+      ?to=budi-santoso
 
-    if (name) {
-      currentGuestName = name;
+      tetap didukung melalui tamu.json.
+    */
+    let guestName = guestParam;
 
-      if (guestElement) {
-        guestElement.textContent = name;
+    const response = await fetch(
+      "./tamu.json?cache=" + Date.now(),
+      { cache: "no-store" }
+    );
+
+    if (response.ok) {
+      const guests = await response.json();
+
+      if (guests[guestParam]) {
+        guestName = guests[guestParam];
       }
-
-      // Nama tamu otomatis masuk ke form RSVP, tetapi tetap bisa diedit.
-      if (nameInput) {
-        nameInput.value = name;
-      }
-
-      document.title = `${name} — Wawan & Wulan`;
-    } else {
-      if (guestElement) guestElement.textContent = "Bapak/Ibu/Saudara/i";
     }
+
+    currentGuestName = guestName;
+
+    guestElement.textContent = guestName;
+
+    if (nameInput) {
+      nameInput.value = guestName;
+    }
+
+    document.title = guestName + " — Wawan & Wulan";
+
+    console.log("Nama tamu berhasil ditampilkan:", guestName);
+
   } catch (error) {
-    console.error("Gagal memuat data tamu:", error);
+    /*
+      Kalau tamu.json gagal dibaca, nama tetap diambil
+      langsung dari URL sehingga link tamu tetap berfungsi.
+    */
+    currentGuestName = guestParam;
+    guestElement.textContent = guestParam;
+
+    if (nameInput) {
+      nameInput.value = guestParam;
+    }
+
+    document.title = guestParam + " — Wawan & Wulan";
+
+    console.warn(
+      "tamu.json tidak dapat dibaca. Menggunakan nama dari URL.",
+      error
+    );
   }
 }
 

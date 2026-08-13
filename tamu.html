@@ -4,38 +4,48 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daftar Tamu — Wawan & Wulan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f7f3ee;color:#4d403b;font-family:Poppins,sans-serif}
+body{margin:0;background:#f7f3ee;color:#4d403b;font-family:Arial,sans-serif}
 .container{max-width:1000px;margin:auto;padding:40px 18px}
-h1,h2{font-family:"Cormorant Garamond",serif}
-h1{font-size:48px;margin:0}
+h1,h2{font-family:Georgia,serif}
+h1{font-size:42px;margin:0}
 .card{background:#fff;border-radius:18px;padding:22px;margin:18px 0;box-shadow:0 10px 35px #0000000d}
 input{width:100%;padding:12px;border:1px solid #d7cbc3;border-radius:10px;font:inherit}
-.row{display:flex;gap:10px;align-items:center;margin:12px 0}
-.name{flex:1;font-weight:500}
+.row{display:flex;gap:10px;align-items:center;margin:12px 0;padding:12px 0;border-bottom:1px solid #eee}
+.name{flex:1;font-weight:600}
 .url{flex:2;font-size:12px;color:#806f67;word-break:break-all}
 button{border:0;background:#73584e;color:#fff;padding:10px 15px;border-radius:22px;font:inherit;cursor:pointer;white-space:nowrap}
 button:hover{opacity:.9}
 .note{font-size:13px;line-height:1.7;color:#756862}
+.success{margin-top:15px;padding:14px;background:#f1ebe6;border-radius:10px;word-break:break-all}
 @media(max-width:700px){.row{display:block}.url{margin:8px 0}.row button{margin-right:5px;margin-bottom:5px}}
 </style>
 </head>
 <body>
 <div class="container">
   <h1>Daftar Tamu</h1>
+
   <p class="note">
-    Halaman ini membaca data dari <b>tamu.json</b>. Untuk menambah tamu secara permanen,
-    tambahkan pasangan <b>slug : nama</b> di file tersebut lalu push ke GitHub.
+    Masukkan nama tamu lalu klik <b>Buat Link</b>.
+    Nama tamu akan dimasukkan langsung ke dalam link, sehingga
+    link yang dibagikan sudah membawa nama tamu dan tidak perlu
+    menunggu perubahan pada GitHub.
   </p>
 
   <div class="card">
-    <h2>Tambah / Cek Link</h2>
-    <input id="guestInput" placeholder="Contoh: Budi Santoso">
-    <p><button id="generateBtn">Buat Link</button></p>
+    <h2>Buat Link Undangan</h2>
+
+    <input
+      id="guestInput"
+      type="text"
+      placeholder="Contoh: Budi Santoso"
+    >
+
+    <p>
+      <button id="generateBtn">Buat Link</button>
+    </p>
+
     <div id="generated"></div>
   </div>
 
@@ -46,70 +56,216 @@ button:hover{opacity:.9}
 </div>
 
 <script>
-const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/");
-
-function slugify(value){
-  return String(value).toLowerCase().trim()
-    .normalize("NFD").replace(/[\\u0300-\\u036f]/g,"")
-    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+function getBaseUrl() {
+  return window.location.origin +
+    window.location.pathname.replace(/\/[^/]*$/, "/index.html");
 }
 
-function copyText(text){
-  if(navigator.clipboard && window.isSecureContext){
-    navigator.clipboard.writeText(text).then(()=>alert("Link berhasil disalin!"));
-  }else{
-    const area=document.createElement("textarea");
-    area.value=text; document.body.appendChild(area); area.select();
-    document.execCommand("copy"); document.body.removeChild(area);
-    alert("Link berhasil disalin!");
-  }
+function makeGuestLink(name) {
+  return getBaseUrl() +
+    "?to=" +
+    encodeURIComponent(name.trim());
 }
 
-function makeRow(slug,name){
-  const url=baseUrl+"?to="+encodeURIComponent(slug);
-  const row=document.createElement("div");
-  row.className="row";
-  row.innerHTML=
-    '<div class="name"></div>'+
-    '<div class="url"></div>'+
-    '<button>Salin Link</button>'+
-    '<button>WhatsApp</button>';
-  row.querySelector(".name").textContent=name;
-  row.querySelector(".url").textContent=url;
-  row.querySelectorAll("button")[0].onclick=()=>copyText(url);
-  row.querySelectorAll("button")[1].onclick=()=>{
-    const text=`Undangan pernikahan Wawan & Wulan untuk ${name}: ${url}`;
-    window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank");
-  };
-  return row;
-}
-
-async function loadGuests(){
-  const list=document.getElementById("guestList");
-  try{
-    const res=await fetch("./tamu.json",{cache:"no-store"});
-    if(!res.ok) throw new Error();
-    const guests=await res.json();
-    list.innerHTML="";
-    Object.entries(guests).forEach(([slug,name])=>{
-      list.appendChild(makeRow(slug,name));
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function () {
+      alert("Link berhasil disalin!");
+    }).catch(function () {
+      fallbackCopy(text);
     });
-  }catch(e){
-    list.textContent="Gagal membaca tamu.json.";
+  } else {
+    fallbackCopy(text);
   }
 }
 
-document.getElementById("generateBtn").onclick=()=>{
-  const name=document.getElementById("guestInput").value.trim();
-  if(!name){alert("Masukkan nama tamu.");return;}
-  const slug=slugify(name);
-  const url=baseUrl+"?to="+encodeURIComponent(slug);
-  const box=document.getElementById("generated");
-  box.innerHTML="";
-  box.appendChild(makeRow(slug,name));
-};
+function fallbackCopy(text) {
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
 
-loadGuests();
+  document.body.appendChild(area);
+  area.focus();
+  area.select();
+
+  try {
+    document.execCommand("copy");
+    alert("Link berhasil disalin!");
+  } catch (error) {
+    alert("Gagal menyalin link.");
+  }
+
+  document.body.removeChild(area);
+}
+
+function createGuestButtons(container, name) {
+  const url = makeGuestLink(name);
+
+  const box = document.createElement("div");
+  box.className = "success";
+
+  const title = document.createElement("strong");
+  title.textContent = name;
+
+  const br = document.createElement("br");
+
+  const urlText = document.createElement("span");
+  urlText.textContent = url;
+
+  const br2 = document.createElement("br");
+
+  const copyButton = document.createElement("button");
+  copyButton.textContent = "Salin Link";
+  copyButton.style.marginTop = "10px";
+
+  copyButton.onclick = function () {
+    copyText(url);
+  };
+
+  const waButton = document.createElement("button");
+  waButton.textContent = "WhatsApp";
+  waButton.style.marginTop = "10px";
+  waButton.style.marginLeft = "6px";
+
+  waButton.onclick = function () {
+    const message =
+      "Undangan pernikahan Wawan & Wulan untuk " +
+      name +
+      ":\n\n" +
+      url;
+
+    window.open(
+      "https://wa.me/?text=" +
+      encodeURIComponent(message),
+      "_blank"
+    );
+  };
+
+  box.appendChild(title);
+  box.appendChild(br);
+  box.appendChild(urlText);
+  box.appendChild(br2);
+  box.appendChild(copyButton);
+  box.appendChild(waButton);
+
+  container.appendChild(box);
+}
+
+document.getElementById("generateBtn").addEventListener(
+  "click",
+  function () {
+
+    const input = document.getElementById("guestInput");
+    const name = input.value.trim();
+
+    if (!name) {
+      alert("Masukkan nama tamu terlebih dahulu.");
+      input.focus();
+      return;
+    }
+
+    const generated =
+      document.getElementById("generated");
+
+    generated.innerHTML = "";
+
+    createGuestButtons(generated, name);
+  }
+);
+
+// Daftar tamu yang sudah ada di tamu.json tetap ditampilkan.
+async function loadGuestList() {
+
+  const list =
+    document.getElementById("guestList");
+
+  try {
+
+    const response =
+      await fetch(
+        "./tamu.json?cache=" + Date.now(),
+        { cache: "no-store" }
+      );
+
+    if (!response.ok) {
+      throw new Error("Gagal membaca tamu.json");
+    }
+
+    const guests = await response.json();
+
+    list.innerHTML = "";
+
+    Object.values(guests).forEach(function (name) {
+
+      const row =
+        document.createElement("div");
+
+      row.className = "row";
+
+      const nameEl =
+        document.createElement("div");
+
+      nameEl.className = "name";
+      nameEl.textContent = name;
+
+      const urlEl =
+        document.createElement("div");
+
+      urlEl.className = "url";
+      urlEl.textContent =
+        makeGuestLink(name);
+
+      const copy =
+        document.createElement("button");
+
+      copy.textContent = "Salin Link";
+
+      copy.onclick = function () {
+        copyText(makeGuestLink(name));
+      };
+
+      const wa =
+        document.createElement("button");
+
+      wa.textContent = "WhatsApp";
+
+      wa.onclick = function () {
+
+        const url =
+          makeGuestLink(name);
+
+        const message =
+          "Undangan pernikahan Wawan & Wulan untuk " +
+          name +
+          ":\n\n" +
+          url;
+
+        window.open(
+          "https://wa.me/?text=" +
+          encodeURIComponent(message),
+          "_blank"
+        );
+      };
+
+      row.appendChild(nameEl);
+      row.appendChild(urlEl);
+      row.appendChild(copy);
+      row.appendChild(wa);
+
+      list.appendChild(row);
+    });
+
+  } catch (error) {
+
+    list.textContent =
+      "Gagal membaca daftar tamu.";
+
+    console.error(error);
+  }
+}
+
+loadGuestList();
 </script>
 </body>
 </html>
